@@ -26,7 +26,6 @@ namespace Group5FinalAssignment
         public void Depend(string dependsOn)
         {
             Dependencies.Add(dependsOn);
-            Console.WriteLine("dependency added");            //test for printing output
         }
 
         public void Install()

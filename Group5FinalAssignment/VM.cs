@@ -55,45 +55,102 @@ namespace Group5FinalAssignment
 
         }
 
-        public void Depend(Component dependent, string dependsOn)
+        public void Depend(string inputName, List<string>inputDepends)
         {
-            dependent.Dependencies.Add(dependsOn);
-            Console.WriteLine("dependency added");            //test for printing output
+            Component comp = new Component(inputName);
+            int index;
+
+            if (FindInList(inputName, installedComponents) == true)
+            {
+                //already installed, cannot change dependencies
+            }
+            else if (FindInList(inputName, knownComponents) == true)
+            {
+                foreach (Component knowncomp in knownComponents)
+                {
+                    if (inputName == knowncomp.Name)
+                    {
+                        index = knownComponents.IndexOf(knowncomp);         //get index of known component
+                        
+                        foreach (string depend in inputDepends)             //add inputDepends to indexed component
+                            knownComponents[index].Dependencies.Add(depend);
+
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                foreach (string depend in inputDepends)                    //add dependency to new component
+                    comp.Dependencies.Add(depend);
+
+                knownComponents.Add(comp);                                 //add new component to known component list
+            }
+
+            //Then check if it is a self referential dependency. ITERATE THRU LIST. VALIDATE INPUTS.
         }
 
-        public bool FindInstallation(string inputName)
+        #region Install
+        public void Install(string inputName)
         {
-            bool isInstalled = false;
+            List<string> deps;
 
-            //Check Installed Components list for a match to the user-supplied name.
-            foreach (Component inst in InstalledComponents)
+            //First check: is it installed? 
+            if (FindInList(inputName, installedComponents) == true)
+                Console.WriteLine(inputName + " is already installed.");
+            else
             {
-                if (inputName == inst.Name)
+                //second check: does it have dependencies?
+                deps = GetDependencies(inputName);
+                if (deps.Count > 0)                                        //has dependencies.             
                 {
-                    isInstalled = true;
+                    //Third check: install any missing dependencies
+                    InstallMissing(deps);
+                }
+                else if (deps.Count <= 0)                                  //no dependencies
+                {
+                    //If all requirements are met, then install this new component
+                    Component comp = new Component(inputName);
+                    installedComponents.Add(comp);
+                    comp.Install();
+                    Console.WriteLine("Installing " + inputName);
+                }
+            }
+        }
+        
+                                                                            //MAKE THIS APPLY TO KNOWN COMPONENTS LIST AS WELL
+        public bool FindInList(string inputName, List<Component>list)
+        {
+            bool foundInList = false;
+
+            //Check: is this component found on the Installed Components list?
+            foreach (Component comp in list)
+            {
+                if (inputName == comp.Name)
+                {
+                    foundInList = true;
                     break;
                 }
                 else
                     continue;
             }
 
-            return isInstalled;
+            return foundInList;
         }
 
-        public List<string> FindDependencies(string inputName)
+        public List<string> GetDependencies(string inputName)
         {
-            //First check: is it already on the known component list? 
             List<string> deps = new List<string>();
 
-            //bool isKnown = false;
-
-            foreach (Component comp in knownComponents)
+            //Check: is it already on the known component list? 
+            //if (FindInList(inputName, knownComponents) == true)
+                
+            foreach (Component knowncomp in knownComponents)
             {
-                if (inputName == comp.Name)
+                if (inputName == knowncomp.Name)
                 {
-                    //isKnown = true;
-                    //get the dependency list of this comp
-                    deps = comp.Dependencies;
+                    //get the dependency list of this component
+                    deps = knowncomp.Dependencies;
                     break;
                 }
                 else
@@ -101,88 +158,23 @@ namespace Group5FinalAssignment
             }
 
             return deps;
-
-            /*
-            //If it is known then check dependency list. 
-            //If it is not known then it has no dependencies by default. Create independent component by this name. 
-            if (isKnown == true)
-            {
-                //check the dependency list of this comp
-                foreach (string dependency in deps)
-                {
-                    //if dependency is not installed, then install it
-                    if (FindInstallation(dependency) == false)
-                        Install(dependency);                            //PATCH ME UP.
-                }
-            }
-            else if (isKnown == false)
-            {
-                Install(inputName);
-            }
-            */
-            
         }
-        public void Install(string inputName)
+
+        public void InstallMissing(List<string> deps)
         {
-            //If not, then run the install command on the dependency before completing this installation. 
-            //Install component. 
-
-            List<string> deps;
-
-            //First check: is it already installed? Remember, each unique named component can only be installed once. 
-            if (FindInstallation(inputName) == false)
+            //check: if dependency is not installed, then install it.
+            foreach (string dependency in deps)
             {
-                //Second check: does it have dependencies?
-                deps = FindDependencies(inputName);                         //This and below commented line should be encapsulated together. 
-
-                if (deps.Count > 0)         //has dependencies.             //
+                if (FindInList(dependency, installedComponents) == true)
+                    continue;
+                else
                 {
-                    //Third check: do those dependencies exist on the Installed Cmponent List? 
-                    foreach (string dependency in deps)
-                    {
-                        if (FindInstallation(dependency) == true)
-                            continue;
-                        else
-                        {
-                            var depdep = FindDependencies(dependency);      //replace: with the encapsulated method including the two above commented lines. 
-                        }
-                    }
+                    Install(dependency);
+                    Console.WriteLine("Installing " + dependency);
                 }
-                else if (deps.Count <= 0)       //no dependencies
-                {
-
-                }
-
-                Component comp;
-
-                comp = new Component(inputName);     //placeholder text
-                comp.Install();
-                installedComponents.Add(comp);
-            }
-            else
-                Console.WriteLine("Already installed.");        //placeholder
-
-        }
-
-        public void CheckDependencies(Component comp)
-        {
-            //does this component require others to function?
-            if (comp.Dependencies.Count > 0)
-            {
-                foreach (Component inst in InstalledComponents)
-                {
-                    //if new component's dependencies not matched to installed component list:
-                    if (comp.Dependencies[0].IndexOf(inst.Name) == -1)
-                    {
-
-                    }
-                }
-            }
-            else if (comp.Dependencies.Count <= 0)
-            {
-
             }
         }
+        #endregion
 
         public void Uninstall()
         {
