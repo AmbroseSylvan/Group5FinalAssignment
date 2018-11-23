@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -10,6 +11,7 @@ namespace Group5FinalAssignment
 {
     class VM
     {
+        #region Properties
         //For Tracking each item entered in window, with attributes for name, list of dependents, isInstalled and isDependent
         private BindingList<Item> items;
         public BindingList<Item> Items
@@ -18,27 +20,27 @@ namespace Group5FinalAssignment
             set { items = value; NotifyChanged(); }
         }
         //Bound to the input textbox
-        private string input;
-        public string Input
+        private string inputDisplay;
+        public string InputDisplay
         {
-            get { return input; }
-            set { input = value; NotifyChanged(); }
+            get { return inputDisplay; }
+            set { inputDisplay = value; NotifyChanged(); }
         }
         //Used to parse the input string into individual elements for further steps
-        private BindingList<String> parsedInput;
-        public BindingList<String> ParsedInput
+        private BindingList<Input> lineInput;
+        public BindingList<Input> LineInput
         {
-            get { return parsedInput; }
-            set { parsedInput = value ;NotifyChanged(); }
+            get { return lineInput; }
+            set { lineInput = value; NotifyChanged(); }
         }
         //Used to display the output to the console.
-        private string output;
-        public string Output
+        private string outputDisplay;
+        public string OutputDisplay
         {
-            get { return output; }
-            set { output = value; NotifyChanged(); }
+            get { return outputDisplay; }
+            set { outputDisplay = value; NotifyChanged(); }
         }
-
+    
         private List<Component> installedComponents;
         public List<Component> InstalledComponents
         {
@@ -47,13 +49,74 @@ namespace Group5FinalAssignment
         }
 
         private List<Component> knownComponents = new List<Component>();
+        #endregion
 
-
+        #region Command Line Input
         //Called by the button to execute the script
+        public void Run()
+        {
+            ReadInputFile();
+            ExecuteScript();
+        }
+
         public void ExecuteScript()
         {
+            foreach (Input cmd in LineInput)
+            {
+
+                if (cmd.Command == "INSTALL")
+                {
+                    Install(cmd.Target);
+                }
+                else if (cmd.Command == "DEPENDS")
+                {
+                    Depend(cmd.Target, cmd.DepElement);
+                }
+                else if (cmd.Command == "UNINSTALL")
+                {
+                    Remove(cmd.Target);
+                }
+                else if (cmd.Command == "LIST")
+                    ;
+                else
+                {
+
+                }
+            }
+        }
+
+        public void ReadInputFile()
+        {
+            string[] inputfile = File.ReadAllLines("List.txt");
+            List<string> inputLines = new List<string>();
+            LineInput = new BindingList<Input>();
+            for (var i = 0; i < inputfile.Length; i++)
+            {
+                inputLines.Add(inputfile[i]);///Add to inputLines to split up string.
+                string[] elements = inputLines[i].Split(' ');
+                LineInput.Add(new Input
+                {
+                    Command = elements[0],
+                    DepElement = new List<string>()
+                });
+                int c = elements.Count();
+                //InputDisplay = InputDisplay + LineInput[i].Command + " " + LineInput[i].Target + " ";
+                if (elements.Count() > 1)
+                {
+                    LineInput[i].Target = elements[1];
+                }
+                if (c > 2)
+                {
+                    for (var j = 2; j < c; j++)
+                    {
+                        LineInput[i].DepElement.Add(elements[j]);
+                        LineInput[i].DisplayDepElement = LineInput[i].DisplayDepElement + " " + LineInput[i].DepElement[j - 2];
+                    }
+                }
+            }
 
         }
+        #endregion
 
         public void Depend(string inputName, List<string>inputDepends)
         {

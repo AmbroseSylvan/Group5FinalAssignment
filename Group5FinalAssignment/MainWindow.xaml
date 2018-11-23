@@ -5,12 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Group5FinalAssignment"
         mc:Ignorable="d"
-        Title="MainWindow" Height="800" Width="800">
+        Title="MainWindow" Height="750" Width="800" ResizeMode="NoResize"
+        WindowStartupLocation="Manual" Top="10" Left="50">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"></RowDefinition>
-            <RowDefinition Height="3*"></RowDefinition>
-            <RowDefinition Height="3*"></RowDefinition>
+            <RowDefinition Height="8*"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="6*"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -18,8 +20,21 @@
             <ColumnDefinition Width="6*"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
-        <TextBox Name="TxtInput" Grid.Row="1" Grid.Column="1" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding Input}"></TextBox>
-        <TextBlock Name="LblOutput" Grid.Row="2" Grid.Column="1" Text="{Binding Ouput}" TextWrapping="Wrap"></TextBlock>
-        <Button Name="BtnExecute" Content="Execute String" FontSize="25" Grid.Row="3" Grid.Column="1" Click="BtnExecute_Click"></Button>
+        <Label Content="Input File Display" Grid.Row="0" Grid.Column="1" FontSize="25" HorizontalContentAlignment="Center"></Label>
+        <!--<TextBlock Text="}" Grid.Row="1" Grid.Column="1"></TextBlock>-->
+        <ListBox Name="TxtInput" Grid.Row="1" Grid.Column="1"  ItemsSource="{Binding LineInput}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="{Binding Command}" FontSize="20" Height="50" Width="125" HorizontalContentAlignment="Left"></Label>
+                        <Label Content="{Binding Target}" FontSize="20" Height="50" Width="150"></Label>
+                        <Label Content="{Binding DisplayDepElement}" FontSize="20" Height="50"></Label>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Label Content="{Binding LineInput[1].Target}" Grid.Row="2" Grid.Column="1" FontSize="25" HorizontalContentAlignment="Center"></Label>
+        <ListBox Name="LblOutput" Grid.Row="3" Grid.Column="1" ItemsSource="{Binding OutputDisplay}"></ListBox>
+        <Button Name="BtnExecute" Content="Execute String" FontSize="25" Grid.Row="4" Grid.Column="1" Click="BtnExecute_Click"></Button>
     </Grid>
 </Window>
