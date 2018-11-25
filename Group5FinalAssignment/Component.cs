@@ -16,6 +16,9 @@ namespace Group5FinalAssignment
 
         public bool isInstalled { get; set; }
 
+        //Mudt track EXPLICIT or IMPLICIT installation. 
+        //Must track if it has dependencies (other things depend on it?)
+
         public Component(string name)
         {
             Name = name;

@@ -123,6 +123,7 @@ namespace Group5FinalAssignment
             Component comp = new Component(inputName);
             int index;
 
+            //check if component installed under this name
             if (FindListIndex(inputName, installedComponents) != -1)
             {
                 //already installed, cannot change dependencies
@@ -230,7 +231,6 @@ namespace Group5FinalAssignment
         //MAKE THIS APPLY TO KNOWN COMPONENTS LIST AS WELL
         public int FindListIndex(string inputName, List<Component> list)
         {
-            //bool foundInList = false;
             int index = -1;
 
             //Check: is this component found on the Installed Components list?
