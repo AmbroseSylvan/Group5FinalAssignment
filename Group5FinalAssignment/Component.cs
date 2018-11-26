@@ -12,12 +12,11 @@ namespace Group5FinalAssignment
 
         public List<string> Dependencies { get; set; }
 
-        public int InstallIndex { get; set; }
+        public List<string> Dependents { get; set; }
 
         public bool isInstalled { get; set; }
 
-        //Mudt track EXPLICIT or IMPLICIT installation. 
-        //Must track if it has dependencies (other things depend on it?)
+        public bool ExplicitInstall { get; set; }
 
         public Component(string name)
         {
@@ -31,9 +30,10 @@ namespace Group5FinalAssignment
             Dependencies.Add(dependsOn);
         }
 
-        public void Install()
+        public void Install(bool isExplicit)
         {
             isInstalled = true;
+            ExplicitInstall = isExplicit;
         }
     }
 }

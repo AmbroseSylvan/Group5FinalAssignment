@@ -41,14 +41,15 @@ namespace Group5FinalAssignment
             set { outputDisplay = value; NotifyChanged(); }
         }
     
-        private List<Component> installedComponents;
-        public List<Component> InstalledComponents
+        private Dictionary<string, Component> installedComponents = new Dictionary<string, Component>();
+        public Dictionary<string, Component> InstalledComponents
         {
             get { return InstalledComponents; }
             set { installedComponents = value; NotifyChanged(); }
         }
 
-        private List<Component> knownComponents = new List<Component>();
+        //trying to use dictionary instead of List. 
+        private Dictionary<string, Component> knownComponents = new Dictionary<string, Component>();
         #endregion
 
         #region Command Line Input
@@ -66,7 +67,7 @@ namespace Group5FinalAssignment
 
                 if (cmd.Command == "INSTALL")
                 {
-                    Install(cmd.Target);
+                    Install(cmd.Target, true);
                 }
                 else if (cmd.Command == "DEPENDS")
                 {
@@ -120,92 +121,79 @@ namespace Group5FinalAssignment
 
         public void Depend(string inputName, List<string>inputDepends)
         {
-            Component comp = new Component(inputName);
-            int index;
-
             //check if component installed under this name
-            if (FindListIndex(inputName, installedComponents) != -1)
+            if (installedComponents.ContainsKey(inputName)) 
             {
-                //already installed, cannot change dependencies
+                Console.WriteLine(inputName + " is already installed, cannot change dependencies");
             }
-            else if (FindListIndex(inputName, knownComponents) != -1)
+            //check if component known under this name
+            else if (knownComponents.ContainsKey(inputName))
             {
-                foreach (Component knowncomp in knownComponents)
-                {
-                    if (inputName == knowncomp.Name)
-                    {
-                        index = knownComponents.IndexOf(knowncomp);         //get index of known component
-                        
-                        foreach (string depend in inputDepends)             //add inputDepends to indexed component
-                            knownComponents[index].Dependencies.Add(depend);
-
-                        break;
-                    }
-                }
+                NewDependency(inputName, inputDepends);
             }
+            //If no component under this name is installed or known
             else
             {
-                foreach (string depend in inputDepends)                    //add dependency to new component
-                    comp.Dependencies.Add(depend);
-
-                knownComponents.Add(comp);                                 //add new component to known component list
+                knownComponents.Add(inputName, new Component(inputName));          //add new component under this name to dictionary
+                NewDependency(inputName, inputDepends);
             }
-
-            //Then check if it is a self referential dependency. ITERATE THRU LIST. VALIDATE INPUTS.
         }
 
-        #region Install
-        public void Install(string inputName)
+        private void NewDependency(string inputName, List<string> inputDepends)
         {
-            List<string> deps;
-
-            //First check: is it installed? 
-            if (FindListIndex(inputName, installedComponents) != -1)
+            foreach (string depend in inputDepends)             //add inputDepends to copy of component
+                                                                //No duplicate or self-referential dependencies
+                if ((depend != inputName) && (!knownComponents[inputName].Dependencies.Contains(depend)))
+                {
+                    knownComponents[inputName].Dependencies.Add(depend);           //add dependency to new component
+                    if (!knownComponents.ContainsKey(depend))   //if dependency is unknown then add to known component list
+                        knownComponents.Add(depend, new Component(depend));
+                    knownComponents[depend].Dependents.Add(inputName);  //add new component to dependent list of its dependency
+                }
+                else
+                    continue;
+        }
+        
+        #region Install
+        public void Install(string inputName, bool isExplicit)
+        {
+            //check: is it installed? 
+            if (installedComponents.ContainsKey(inputName))
                 Console.WriteLine(inputName + " is already installed.");
+            //check: is this component known?
+            else if (knownComponents.ContainsKey(inputName))
+            {
+                //implicitly install dependencies.             
+                if (knownComponents[inputName].Dependencies.Count > 0)
+                    foreach (string dependency in knownComponents[inputName].Dependencies)
+                        Install(dependency, false);
+                
+                //Install this new component
+                knownComponents[inputName].Install(isExplicit);
+                Console.WriteLine("Installing " + inputName);
+            }
+            //if component is not known or installed then add to system and install
             else
             {
-                //second check: does it have dependencies?
-                deps = GetDependencies(inputName);
-                if (deps.Count > 0)                                        //has dependencies.             
-                {
-                    //Third check: install any missing dependencies
-                    InstallMissing(deps);
-                }
-                else if (deps.Count <= 0)                                  //no dependencies
-                {
-                    //If all requirements are met, then install this new component
-                    Component comp = new Component(inputName);
-                    installedComponents.Add(comp);
-                    comp.Install();
-                    Console.WriteLine("Installing " + inputName);
-                }
+                knownComponents.Add(inputName, new Component(inputName));       //add new component under this name to dictionary
+                knownComponents[inputName].Install(isExplicit);
+                Console.WriteLine("Installing " + inputName);
             }
         }
         
-        public void InstallMissing(List<string> deps)
-        {
-            //check: if dependency is not installed, then install it.
-            foreach (string dependency in deps)
-            {
-                if (FindListIndex(dependency, installedComponents) != -1)
-                    continue;
-                else
-                {
-                    Install(dependency);
-                    Console.WriteLine("Installing " + dependency);
-                }
-            }
-        }
         #endregion
 
         public void Remove(string inputName)
         {
-            int installIndex = FindListIndex(inputName, installedComponents);
-            int depIndex;
-            string depName;
+            /* New idea for how to do this:
+             * check: does component being removed have dependents other than the one already being uninstalled? If YES, no remove. If NO, proceed.
+             * check: Is this component explicitly installed? If YES, must be removed manually. If NO, can be automatically removed. 
+             */
 
-            if (installIndex != -1)                //this means it is installed.
+            if (installedComponents.TryGetValue(inputName, out Component comp))
             {
+                //PROBLEM: ALL DEPENDENCIES WILL FAIL THIS TEST AND BE UNABLE TO BE UNINSTALLED. There must be a more specific test than 
+                //"is it a dependency for any other component" Make it check for dependents OTHER than the component we are trying to remove. 
                 if (isDependency(inputName) == true)
                 {
                     Console.WriteLine(inputName + " is still needed.");
@@ -213,41 +201,20 @@ namespace Group5FinalAssignment
                 else
                 {
                     //before removing, try to remove its dependencies as well
-                    foreach (string dep in installedComponents[installIndex].Dependencies)
+                    if (comp.Dependencies.Count > 0)
                     {
-                        //get name of each dependency and use as argument in Remove()
-                        depIndex = FindListIndex(dep, installedComponents);
-                        depName = installedComponents[depIndex].Name;
-                        Remove(depName);
+                        foreach (string dep in comp.Dependencies)
+                        {
+                            //get name of each dependency and use as argument in Remove()
+                            Remove(dep);
+                        }
                     }
 
-                    installedComponents.Remove(installedComponents[installIndex]);
+                    installedComponents.Remove(inputName);
                 }
             }
             else
                 Console.WriteLine("not installed.");                            //placeholder text. 
-        }
-
-        //MAKE THIS APPLY TO KNOWN COMPONENTS LIST AS WELL
-        public int FindListIndex(string inputName, List<Component> list)
-        {
-            int index = -1;
-
-            //Check: is this component found on the Installed Components list?
-            foreach (Component comp in list)
-            {
-                if (inputName == comp.Name)
-                {
-                    //foundInList = true;
-                    index = list.IndexOf(comp);
-                    return index;
-                }
-                else
-                    continue;
-            }
-
-            //return foundInList;
-            return index;
         }
 
         public List<string> GetDependencies(string inputName)
@@ -255,19 +222,8 @@ namespace Group5FinalAssignment
             List<string> deps = new List<string>();
 
             //Check: is it already on the known component list? 
-            //if (FindInList(inputName, knownComponents) == true)
-
-            foreach (Component knowncomp in knownComponents)
-            {
-                if (inputName == knowncomp.Name)
-                {
-                    //get the dependency list of this component
-                    deps = knowncomp.Dependencies;
-                    break;
-                }
-                else
-                    continue;
-            }
+            if (knownComponents.TryGetValue(inputName, out Component comp))
+                deps = comp.Dependencies;
 
             return deps;
         }
