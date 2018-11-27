@@ -41,13 +41,6 @@ namespace Group5FinalAssignment
             set { outputDisplay = value; NotifyChanged(); }
         }
     
-        private Dictionary<string, Component> installedComponents = new Dictionary<string, Component>();
-        public Dictionary<string, Component> InstalledComponents
-        {
-            get { return InstalledComponents; }
-            set { installedComponents = value; NotifyChanged(); }
-        }
-
         //trying to use dictionary instead of List. 
         private Dictionary<string, Component> knownComponents = new Dictionary<string, Component>();
         #endregion
@@ -122,7 +115,7 @@ namespace Group5FinalAssignment
         public void Depend(string inputName, List<string>inputDepends)
         {
             //check if component installed under this name
-            if (installedComponents.ContainsKey(inputName)) 
+            if (knownComponents[inputName].isInstalled) 
             {
                 Console.WriteLine(inputName + " is already installed, cannot change dependencies");
             }
@@ -158,7 +151,7 @@ namespace Group5FinalAssignment
         public void Install(string inputName, bool isExplicit)
         {
             //check: is it installed? 
-            if (installedComponents.ContainsKey(inputName))
+            if (knownComponents[inputName].isInstalled)
                 Console.WriteLine(inputName + " is already installed.");
             //check: is this component known?
             else if (knownComponents.ContainsKey(inputName))
@@ -183,75 +176,40 @@ namespace Group5FinalAssignment
         
         #endregion
 
-        public void Remove(string inputName)
+        public void Remove(string inputName, string ExplicitRemoval)
         {
-            /* New idea for how to do this:
-             * check: does component being removed have dependents other than the one already being uninstalled? If YES, no remove. If NO, proceed.
-             * check: Is this component explicitly installed? If YES, must be removed manually. If NO, can be automatically removed. 
-             */
+            // INCOMPLETE. How Do I exclude the component that is being explicitly removed if it is a dependent of the component being implicitly removed?
 
-            if (installedComponents.TryGetValue(inputName, out Component comp))
+            //ExplicitRemoval is used to pass the name of the component user is explicitly removing down thru each recursion
+            //ExplicitRemoval is null ("") in first loop of this method
+
+            //check: is it installed? 
+            if (knownComponents[inputName].isInstalled)
             {
-                //PROBLEM: ALL DEPENDENCIES WILL FAIL THIS TEST AND BE UNABLE TO BE UNINSTALLED. There must be a more specific test than 
-                //"is it a dependency for any other component" Make it check for dependents OTHER than the component we are trying to remove. 
-                if (isDependency(inputName) == true)
-                {
-                    Console.WriteLine(inputName + " is still needed.");
-                }
-                else
-                {
-                    //before removing, try to remove its dependencies as well
-                    if (comp.Dependencies.Count > 0)
-                    {
-                        foreach (string dep in comp.Dependencies)
+                //check: does component being removed have dependents?
+                if (knownComponents[inputName].Dependents.Count > 0)
+                    //Cancel removal of component if any dependents are installed 
+                    foreach (string dependent in knownComponents[inputName].Dependents)
+                        //exclude the component being removed from this check
+                        if ((knownComponents[dependent].isInstalled) && (dependent != ExplicitRemoval))
                         {
-                            //get name of each dependency and use as argument in Remove()
-                            Remove(dep);
+                            Console.WriteLine(inputName + " is still needed.");
+                            break;
                         }
-                    }
+                        else
+                            knownComponents[inputName].isInstalled = false;
+                else
+                    knownComponents[inputName].isInstalled = false;
 
-                    installedComponents.Remove(inputName);
+                foreach (string dependency in knownComponents[inputName].Dependencies)
+                {
+                    if (knownComponents[dependency].ExplicitInstall == false)
+                        Remove(dependency, inputName);
                 }
             }
             else
-                Console.WriteLine("not installed.");                            //placeholder text. 
-        }
-
-        public List<string> GetDependencies(string inputName)
-        {
-            List<string> deps = new List<string>();
-
-            //Check: is it already on the known component list? 
-            if (knownComponents.TryGetValue(inputName, out Component comp))
-                deps = comp.Dependencies;
-
-            return deps;
-        }
-
-        public bool isDependency(string inputName)
-        {
-            bool isDependency = false;
-
-            foreach (Component inst in installedComponents)
-            {
-                if (inst.Dependencies.Count > 0)
-                {
-                    foreach (string dep in inst.Dependencies)
-                    {
-                        if (inputName == dep)
-                        {
-                            isDependency = true;
-                            return isDependency;
-                        }
-                        else
-                            continue;
-                    }
-                }
-                else
-                    continue;
-            }
-
-            return isDependency;
+                Console.WriteLine(inputName + " is not installed.");
+            
         }
 
         public void List()
