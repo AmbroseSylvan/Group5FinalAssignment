@@ -22,15 +22,12 @@ namespace Group5FinalAssignment
         {
             Name = name;
             Dependencies = new List<string>();
+            Dependents = new List<string>();
             isInstalled = false;
+            ExplicitInstall = false;
         }
 
-        public void Depend(string dependsOn)
-        {
-            Dependencies.Add(dependsOn);
-        }
-
-        public void Install(bool isExplicit)
+        public void Setup (bool isExplicit)
         {
             isInstalled = true;
             ExplicitInstall = isExplicit;
