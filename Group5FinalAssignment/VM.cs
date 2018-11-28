@@ -9,16 +9,9 @@ using System.Threading.Tasks;
 
 namespace Group5FinalAssignment
 {
-    class VM
+    class VM : INotifyPropertyChanged
     {
         #region Properties
-        //For Tracking each item entered in window, with attributes for name, list of dependents, isInstalled and isDependent
-        private BindingList<Item> items;
-        public BindingList<Item> Items
-        {
-            get { return items; }
-            set { items = value; NotifyChanged(); }
-        }
         //Bound to the input textbox
         private string inputDisplay;
         public string InputDisplay
@@ -68,7 +61,7 @@ namespace Group5FinalAssignment
                 }
                 else if (cmd.Command == "UNINSTALL")
                 {
-                    Remove(cmd.Target);
+                    Remove(cmd.Target, cmd.Target);
                 }
                 else if (cmd.Command == "LIST")
                     ;
@@ -87,14 +80,15 @@ namespace Group5FinalAssignment
 
             for (var i = 0; i < inputfile.Length; i++)
             {
-                cmdElements = inputfile[i].Split(' ');
+                cmdElements = inputfile[i].Split(' ');                      //Split each command line
+                int c = cmdElements.Count();
+
                 LineInput.Add(new Input
                 {
-                    Command = cmdElements[0],
-                    Dependencies = new List<string>()
+                    Command = cmdElements[0]                               //Element at index 0 is command type
                 });
 
-                int c = cmdElements.Count();                                //element at index 1 is target of command
+                //element at index 1 is target of command
                 if (c > 1)                                                  
                     LineInput[i].Target = cmdElements[1];
                 if (c > 2)
@@ -131,8 +125,7 @@ namespace Group5FinalAssignment
                 else
                     continue;
         }
-
-        #region Install
+        
         public void Install(string inputName, bool isExplicit)
         {
             if (!Components.ContainsKey(inputName))                         //If component is not known, add to dictionary
@@ -148,8 +141,6 @@ namespace Group5FinalAssignment
             Components[inputName].Setup(isExplicit);                        //Install component
             Console.WriteLine("Installing " + inputName);
         }
-        
-        #endregion
 
         public void Remove(string inputName, string ExplicitRemoval)
         {
@@ -190,12 +181,8 @@ namespace Group5FinalAssignment
         public void List()
         {
 
-        }    
-        public void isNew(string newItem)
-        {
-
         }
-
+        
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyChanged([CallerMemberName] string name = "")
         {
