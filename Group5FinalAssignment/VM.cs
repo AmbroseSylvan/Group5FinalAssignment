@@ -80,7 +80,7 @@ namespace Group5FinalAssignment
 
             for (var i = 0; i < inputfile.Length; i++)
             {
-                cmdElements = inputfile[i].Split(' ');                      //Split each command line
+                cmdElements = inputfile[i].Split(' ');                     //Split each command line
                 int c = cmdElements.Count();
 
                 LineInput.Add(new Input
@@ -88,19 +88,17 @@ namespace Group5FinalAssignment
                     Command = cmdElements[0]                               //Element at index 0 is command type
                 });
 
-                //element at index 1 is target of command
-                if (c > 1)                                                  
+                if (c > 1)                                                 //element at index 1 is target of command
                     LineInput[i].Target = cmdElements[1];
-                if (c > 2)
+                if (c > 2)                                                 //elements at index 2 and higher are dependencies
                 {
-                    for (int j = 2; j < c; j++)                             //Start adding dependencies from element at index 2
+                    for (int j = 2; j < c; j++)                            
                     {
                         LineInput[i].Dependencies.Add(cmdElements[j]);
                         LineInput[i].DisplayDepElement = LineInput[i].DisplayDepElement + " " + LineInput[i].Dependencies[j - 2];
                     }
                 }
             }
-
         }
         #endregion
 
@@ -118,7 +116,7 @@ namespace Group5FinalAssignment
                 if ((depend != inputName) && (!Components[inputName].Dependencies.Contains(depend)))
                 {
                     Components[inputName].Dependencies.Add(depend);         //add dependency to component
-                    if (!Components.ContainsKey(depend))   //if dependency is unknown then add to known component list
+                    if (!Components.ContainsKey(depend))                    //if dependency is unknown then add to known component list
                         Components.Add(depend, new Component(depend));
                     Components[depend].Dependents.Add(inputName);           //add dependent component to dependency
                 }
@@ -130,7 +128,7 @@ namespace Group5FinalAssignment
         {
             if (!Components.ContainsKey(inputName))                         //If component is not known, add to dictionary
                 Components.Add(inputName, new Component(inputName));
-            else if (Components[inputName].isInstalled)                     //If component is installed, return void
+            if (Components[inputName].isInstalled)                          //If component is installed, return void
             {
                 Console.WriteLine(inputName + " is already installed.");
                 return;
