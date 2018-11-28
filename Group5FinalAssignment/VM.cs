@@ -64,7 +64,7 @@ namespace Group5FinalAssignment
                 }
                 else if (cmd.Command == "DEPENDS")
                 {
-                    Depend(cmd.Target, cmd.DepElement);
+                    Depend(cmd.Target, cmd.Dependencies);
                 }
                 else if (cmd.Command == "UNINSTALL")
                 {
@@ -82,29 +82,27 @@ namespace Group5FinalAssignment
         public void ReadInputFile()
         {
             string[] inputfile = File.ReadAllLines("List.txt");
-            List<string> inputLines = new List<string>();
             LineInput = new BindingList<Input>();
+            string[] cmdElements;
+
             for (var i = 0; i < inputfile.Length; i++)
             {
-                inputLines.Add(inputfile[i]);///Add to inputLines to split up string.
-                string[] elements = inputLines[i].Split(' ');
+                cmdElements = inputfile[i].Split(' ');
                 LineInput.Add(new Input
                 {
-                    Command = elements[0],
-                    DepElement = new List<string>()
+                    Command = cmdElements[0],
+                    Dependencies = new List<string>()
                 });
-                int c = elements.Count();
-                //InputDisplay = InputDisplay + LineInput[i].Command + " " + LineInput[i].Target + " ";
-                if (elements.Count() > 1)
-                {
-                    LineInput[i].Target = elements[1];
-                }
+
+                int c = cmdElements.Count();                                //element at index 1 is target of command
+                if (c > 1)                                                  
+                    LineInput[i].Target = cmdElements[1];
                 if (c > 2)
                 {
-                    for (var j = 2; j < c; j++)
+                    for (int j = 2; j < c; j++)                             //Start adding dependencies from element at index 2
                     {
-                        LineInput[i].DepElement.Add(elements[j]);
-                        LineInput[i].DisplayDepElement = LineInput[i].DisplayDepElement + " " + LineInput[i].DepElement[j - 2];
+                        LineInput[i].Dependencies.Add(cmdElements[j]);
+                        LineInput[i].DisplayDepElement = LineInput[i].DisplayDepElement + " " + LineInput[i].Dependencies[j - 2];
                     }
                 }
             }
@@ -114,64 +112,41 @@ namespace Group5FinalAssignment
 
         public void Depend(string inputName, List<string>inputDepends)
         {
-            //check if component installed under this name
-            if (Components[inputName].isInstalled) 
+            if (!Components.ContainsKey(inputName))                         //If dependent component not known, add to dictionary
+                Components.Add(inputName, new Component(inputName));
+            if (Components[inputName].isInstalled)                          //If dependent component is installed, return void
             {
                 Console.WriteLine(inputName + " is already installed, cannot change dependencies");
+                return;
             }
-            //check if component known under this name
-            else if (Components.ContainsKey(inputName))
-            {
-                NewDependency(inputName, inputDepends);
-            }
-            //If no component under this name is installed or known
-            else
-            {
-                Components.Add(inputName, new Component(inputName));          //add new component under this name to dictionary
-                NewDependency(inputName, inputDepends);
-            }
-        }
-
-        private void NewDependency(string inputName, List<string> inputDepends)
-        {
-            foreach (string depend in inputDepends)             //add inputDepends to copy of component
+            foreach (string depend in inputDepends)                         //Else
                 //No duplicate or self-referential dependencies
                 if ((depend != inputName) && (!Components[inputName].Dependencies.Contains(depend)))
                 {
-                    Components[inputName].Dependencies.Add(depend);           //add dependency to component
+                    Components[inputName].Dependencies.Add(depend);         //add dependency to component
                     if (!Components.ContainsKey(depend))   //if dependency is unknown then add to known component list
                         Components.Add(depend, new Component(depend));
-                    Components[depend].Dependents.Add(inputName);  //add new component to dependent list of its dependency
+                    Components[depend].Dependents.Add(inputName);           //add dependent component to dependency
                 }
                 else
                     continue;
         }
-        
+
         #region Install
         public void Install(string inputName, bool isExplicit)
         {
-            //check: is it installed? 
-            if (Components[inputName].isInstalled)
+            if (!Components.ContainsKey(inputName))                         //If component is not known, add to dictionary
+                Components.Add(inputName, new Component(inputName));
+            else if (Components[inputName].isInstalled)                     //If component is installed, return void
+            {
                 Console.WriteLine(inputName + " is already installed.");
-            //check: is this component known?
-            else if (Components.ContainsKey(inputName))
-            {
-                //implicitly install dependencies.             
-                if (Components[inputName].Dependencies.Count > 0)
-                    foreach (string dependency in Components[inputName].Dependencies)
+                return;
+            }             
+            if (Components[inputName].Dependencies.Count > 0)               //implicitly install dependencies. 
+                foreach (string dependency in Components[inputName].Dependencies)
                         Install(dependency, false);
-                
-                //Install this new component
-                Components[inputName].Setup(isExplicit);
-                Console.WriteLine("Installing " + inputName);
-            }
-            //if component is not known or installed then add to system and install
-            else
-            {
-                Components.Add(inputName, new Component(inputName));       //add new component under this name to dictionary
-                Components[inputName].Setup(isExplicit);
-                Console.WriteLine("Installing " + inputName);
-            }
+            Components[inputName].Setup(isExplicit);                        //Install component
+            Console.WriteLine("Installing " + inputName);
         }
         
         #endregion

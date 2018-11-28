@@ -13,7 +13,7 @@ namespace Group5FinalAssignment
 
         public string Target { get; set; }
 
-        public List<string> DepElement { get; set; } = new List<string>();
+        public List<string> Dependencies { get; set; } = new List<string>();
 
         public string DisplayDepElement { get; set; }
 
