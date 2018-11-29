@@ -29,7 +29,7 @@ namespace Group5FinalAssignment
 
         private void BtnExecute_Click(object sender, RoutedEventArgs e)
         {
-            vm.ReadInputFile();
+            vm.Run();
         }
     }
 }

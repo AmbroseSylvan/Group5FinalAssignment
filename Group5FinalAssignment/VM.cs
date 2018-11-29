@@ -33,8 +33,6 @@ namespace Group5FinalAssignment
             get { return outputDisplay; }
             set { outputDisplay = value; NotifyChanged(); }
         }
-    
-        //trying to use dictionary instead of List. 
         private Dictionary<string, Component> Components = new Dictionary<string, Component>();
         #endregion
 
@@ -61,7 +59,7 @@ namespace Group5FinalAssignment
                 }
                 else if (cmd.Command == "UNINSTALL")
                 {
-                    Remove(cmd.Target, cmd.Target);
+                    Remove(cmd.Target, true);
                 }
                 else if (cmd.Command == "LIST")
                     ;
@@ -140,7 +138,46 @@ namespace Group5FinalAssignment
             Console.WriteLine("Installing " + inputName);
         }
 
-        public void Remove(string inputName, string ExplicitRemoval)
+        void Remove(string name, bool ExplicitRemove)
+        {
+            if (Components[name].Dependents.Count > 0)
+            {
+                foreach (string p in Components[name].Dependents)
+                {
+                    if (Components[p].isInstalled == true)
+                    {
+                        return;
+                    }
+                }
+            }
+
+            if (Components[name].ExplicitInstall == true)
+            {
+                Components[name].isInstalled = false;
+            }
+            else if (status == STATUS_INSTALLED_IMPLICITLY && Components[name].ExplicitInstall == false)
+            {
+                Components[name].isInstalled = false;
+            }
+
+            if (Components[name].Dependencies.Count > 0)
+            {
+                foreach (string c in Components[name].Dependencies)
+                {
+                    Remove(c, false);
+                }
+            }
+        }
+
+        /*
+         * if removal is explicit and install is explicit then remove. 
+         * If removal is impicit and install is excplicit then no remove.
+         * If removal is expicit and install is implicit then remove
+         * if removal is implicit and install is implicit then remove. 
+         */
+
+
+        public void remove(string inputName, string ExplicitRemoval)
         {
             // INCOMPLETE. How Do I exclude the component that is being explicitly removed if it is a dependent of the component being implicitly removed?
 
