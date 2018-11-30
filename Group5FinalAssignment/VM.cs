@@ -48,24 +48,17 @@ namespace Group5FinalAssignment
         {
             foreach (Input cmd in LineInput)
             {
-
                 if (cmd.Command == "INSTALL")
-                {
                     Install(cmd.Target, true);
-                }
-                else if (cmd.Command == "DEPENDS")
-                {
+                else if (cmd.Command == "DEPEND")
                     Depend(cmd.Target, cmd.Dependencies);
-                }
-                else if (cmd.Command == "UNINSTALL")
-                {
+                else if (cmd.Command == "REMOVE")
                     Remove(cmd.Target, true);
-                }
                 else if (cmd.Command == "LIST")
-                    ;
+                    continue;
                 else
                 {
-
+                    continue;
                 }
             }
         }
@@ -76,7 +69,7 @@ namespace Group5FinalAssignment
             LineInput = new BindingList<Input>();
             string[] cmdElements;
 
-            for (var i = 0; i < inputfile.Length; i++)
+            for (int i = 0; i < inputfile.Length; i++)
             {
                 cmdElements = inputfile[i].Split(' ');                     //Split each command line
                 int c = cmdElements.Count();
@@ -89,13 +82,11 @@ namespace Group5FinalAssignment
                 if (c > 1)                                                 //element at index 1 is target of command
                     LineInput[i].Target = cmdElements[1];
                 if (c > 2)                                                 //elements at index 2 and higher are dependencies
-                {
                     for (int j = 2; j < c; j++)                            
                     {
                         LineInput[i].Dependencies.Add(cmdElements[j]);
                         LineInput[i].DisplayDepElement = LineInput[i].DisplayDepElement + " " + LineInput[i].Dependencies[j - 2];
                     }
-                }
             }
         }
         #endregion
@@ -138,81 +129,34 @@ namespace Group5FinalAssignment
             Console.WriteLine("Installing " + inputName);
         }
 
-        void Remove(string name, bool ExplicitRemove)
+        void Remove(string name, bool ExplicitlyRemove)
         {
-            if (Components[name].Dependents.Count > 0)
+            //Exit conditions
+            if (Components[name].ExplicitInstall == true && ExplicitlyRemove == false)
+                return;
+            if (Components[name].isInstalled == false)
             {
-                foreach (string p in Components[name].Dependents)
-                {
-                    if (Components[p].isInstalled == true)
+                Console.WriteLine(name + " is not installed.");
+                return;
+            }
+            if (Components[name].Dependents.Count > 0)
+                foreach (string d in Components[name].Dependents)
+                    if (Components[d].isInstalled == true)
                     {
+                        Console.WriteLine(name + " is still needed.");
                         return;
                     }
-                }
-            }
+                    else
+                        continue;
 
-            if (Components[name].ExplicitInstall == true)
-            {
-                Components[name].isInstalled = false;
-            }
-            else if (status == STATUS_INSTALLED_IMPLICITLY && Components[name].ExplicitInstall == false)
-            {
-                Components[name].isInstalled = false;
-            }
-
+            //Uninstall components
+            Console.WriteLine("Removing " + name);
+            Components[name].isInstalled = false;
             if (Components[name].Dependencies.Count > 0)
-            {
-                foreach (string c in Components[name].Dependencies)
-                {
-                    Remove(c, false);
-                }
-            }
+                foreach (string d in Components[name].Dependencies)
+                    Remove(d, false);
         }
-
-        /*
-         * if removal is explicit and install is explicit then remove. 
-         * If removal is impicit and install is excplicit then no remove.
-         * If removal is expicit and install is implicit then remove
-         * if removal is implicit and install is implicit then remove. 
-         */
-
-
-        public void remove(string inputName, string ExplicitRemoval)
-        {
-            // INCOMPLETE. How Do I exclude the component that is being explicitly removed if it is a dependent of the component being implicitly removed?
-
-            //ExplicitRemoval is used to pass the name of the component user is explicitly removing down thru each recursion
-            //ExplicitRemoval is null ("") in first loop of this method
-
-            //check: is it installed? 
-            if (Components[inputName].isInstalled)
-            {
-                //check: does component being removed have dependents?
-                if (Components[inputName].Dependents.Count > 0)
-                    //Cancel removal of component if any dependents are installed 
-                    foreach (string dependent in Components[inputName].Dependents)
-                        //exclude the component being removed from this check
-                        if ((Components[dependent].isInstalled) && (dependent != ExplicitRemoval))
-                        {
-                            Console.WriteLine(inputName + " is still needed.");
-                            break;
-                        }
-                        else
-                            Components[inputName].isInstalled = false;
-                else
-                    Components[inputName].isInstalled = false;
-
-                foreach (string dependency in Components[inputName].Dependencies)
-                {
-                    if (Components[dependency].ExplicitInstall == false)
-                        Remove(dependency, inputName);
-                }
-            }
-            else
-                Console.WriteLine(inputName + " is not installed.");
-            
-        }
-
+        
         public void List()
         {
 
