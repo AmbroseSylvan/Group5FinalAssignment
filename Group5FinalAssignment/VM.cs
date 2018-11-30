@@ -12,23 +12,16 @@ namespace Group5FinalAssignment
     class VM : INotifyPropertyChanged
     {
         #region Properties
-        //Bound to the input textbox
-        private string inputDisplay;
-        public string InputDisplay
+        //Used to parse the input string into individual elements for further steps and to display to list box.
+        private BindingList<Input> inputLines;
+        public BindingList<Input> InputLines
         {
-            get { return inputDisplay; }
-            set { inputDisplay = value; NotifyChanged(); }
-        }
-        //Used to parse the input string into individual elements for further steps
-        private BindingList<Input> lineInput;
-        public BindingList<Input> LineInput
-        {
-            get { return lineInput; }
-            set { lineInput = value; NotifyChanged(); }
+            get { return inputLines; }
+            set { inputLines = value; NotifyChanged(); }
         }
         //Used to display the output to the console.
-        private string outputDisplay;
-        public string OutputDisplay
+        private BindingList<Output> outputDisplay;
+        public BindingList<Output> OutputDisplay
         {
             get { return outputDisplay; }
             set { outputDisplay = value; NotifyChanged(); }
@@ -40,33 +33,15 @@ namespace Group5FinalAssignment
         //Called by the button to execute the script
         public void Run()
         {
+            OutputDisplay = new BindingList<Output>();
             ReadInputFile();
             ExecuteScript();
-        }
-
-        public void ExecuteScript()
-        {
-            foreach (Input cmd in LineInput)
-            {
-                if (cmd.Command == "INSTALL")
-                    Install(cmd.Target, true);
-                else if (cmd.Command == "DEPEND")
-                    Depend(cmd.Target, cmd.Dependencies);
-                else if (cmd.Command == "REMOVE")
-                    Remove(cmd.Target, true);
-                else if (cmd.Command == "LIST")
-                    continue;
-                else
-                {
-                    continue;
-                }
-            }
         }
 
         public void ReadInputFile()
         {
             string[] inputfile = File.ReadAllLines("List.txt");
-            LineInput = new BindingList<Input>();
+            InputLines = new BindingList<Input>();
             string[] cmdElements;
 
             for (int i = 0; i < inputfile.Length; i++)
@@ -74,32 +49,83 @@ namespace Group5FinalAssignment
                 cmdElements = inputfile[i].Split(' ');                     //Split each command line
                 int c = cmdElements.Count();
 
-                LineInput.Add(new Input
+                InputLines.Add(new Input
                 {
                     Command = cmdElements[0]                               //Element at index 0 is command type
                 });
 
                 if (c > 1)                                                 //element at index 1 is target of command
-                    LineInput[i].Target = cmdElements[1];
+                    InputLines[i].Target = cmdElements[1];
                 if (c > 2)                                                 //elements at index 2 and higher are dependencies
-                    for (int j = 2; j < c; j++)                            
+                    for (int j = 2; j < c; j++)
                     {
-                        LineInput[i].Dependencies.Add(cmdElements[j]);
-                        LineInput[i].DisplayDepElement = LineInput[i].DisplayDepElement + " " + LineInput[i].Dependencies[j - 2];
+                        InputLines[i].Dependencies.Add(cmdElements[j]);
+                        InputLines[i].DisplayDepElement = InputLines[i].DisplayDepElement + " " + InputLines[i].Dependencies[j - 2];
                     }
             }
         }
+
+        public void ExecuteScript()
+        {
+            //Check if the input contains an END statement
+            bool oktoExecute = false;
+            foreach (Input line in InputLines)
+                if (line.Command == "END")
+                {
+                    oktoExecute = true;
+                    break;
+                }
+
+            if (oktoExecute == true)
+                foreach (Input cmd in InputLines)
+                {
+                    switch (cmd.Command)
+                    {
+                        case "INSTALL":
+                            BuildOutput(cmd.Command, cmd.Target);
+                            Install(cmd.Target, true);
+                            break;
+                        case "DEPEND":
+                            BuildOutput(cmd.Command, cmd.Target);
+                            Depend(cmd.Target, cmd.Dependencies);
+                            break;
+                        case "REMOVE":
+                            BuildOutput(cmd.Command, cmd.Target);
+                            Remove(cmd.Target, true);
+                            break;
+                        case "LIST":
+                            break;
+                        case "END":
+                            BuildOutput(cmd.Command, cmd.Target);
+                            return;
+                    }
+                }
+            else
+                BuildOutput("", "Invalid syntax.  No END statement found.");
+        }
+
+        private void BuildOutput(string command, string target)
+        {
+            OutputDisplay.Add(new Output
+            {
+                Command = command,
+                Target = target
+            });
+        }
         #endregion
 
-        public void Depend(string inputName, List<string>inputDepends)
+        public void Depend(string inputName, List<string> inputDepends)
         {
             if (!Components.ContainsKey(inputName))                         //If dependent component not known, add to dictionary
                 Components.Add(inputName, new Component(inputName));
             if (Components[inputName].isInstalled)                          //If dependent component is installed, return void
             {
-                Console.WriteLine(inputName + " is already installed, cannot change dependencies");
+                //Console.WriteLine(inputName + " is already installed, cannot change dependencies");
+                string lineWrite = " is already installed, cannot change dependencies";
+                BuildOutput(inputName, lineWrite);
                 return;
             }
+            string depList = "";
             foreach (string depend in inputDepends)                         //Else
                 //No duplicate or self-referential dependencies
                 if ((depend != inputName) && (!Components[inputName].Dependencies.Contains(depend)))
@@ -108,25 +134,35 @@ namespace Group5FinalAssignment
                     if (!Components.ContainsKey(depend))                    //if dependency is unknown then add to known component list
                         Components.Add(depend, new Component(depend));
                     Components[depend].Dependents.Add(inputName);           //add dependent component to dependency
+                    depList = depList + depend;
                 }
                 else
                     continue;
+
+            OutputDisplay.Add(new Output
+            {
+                Command = "Depend",
+                Target = inputName,
+                DepOutput = depList
+            });
         }
-        
+
         public void Install(string inputName, bool isExplicit)
         {
             if (!Components.ContainsKey(inputName))                         //If component is not known, add to dictionary
                 Components.Add(inputName, new Component(inputName));
             if (Components[inputName].isInstalled)                          //If component is installed, return void
             {
-                Console.WriteLine(inputName + " is already installed.");
+                //Console.WriteLine(inputName + " is already installed.");
+                string lineWrite = " is already installed.";
+                BuildOutput(inputName, lineWrite);
                 return;
             }             
             if (Components[inputName].Dependencies.Count > 0)               //implicitly install dependencies. 
                 foreach (string dependency in Components[inputName].Dependencies)
                         Install(dependency, false);
             Components[inputName].Setup(isExplicit);                        //Install component
-            Console.WriteLine("Installing " + inputName);
+            BuildOutput("Installing ", inputName);
         }
 
         void Remove(string name, bool ExplicitlyRemove)
@@ -143,15 +179,16 @@ namespace Group5FinalAssignment
                 foreach (string d in Components[name].Dependents)
                     if (Components[d].isInstalled == true)
                     {
-                        Console.WriteLine(name + " is still needed.");
+                        BuildOutput(name, " is still needed.");
                         return;
                     }
                     else
                         continue;
-
+            
             //Uninstall components
-            Console.WriteLine("Removing " + name);
+            BuildOutput("Removing ", name);
             Components[name].isInstalled = false;
+            Components[name].ExplicitInstall = new bool();
             if (Components[name].Dependencies.Count > 0)
                 foreach (string d in Components[name].Dependencies)
                     Remove(d, false);

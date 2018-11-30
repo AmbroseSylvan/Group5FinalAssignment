@@ -24,7 +24,6 @@ namespace Group5FinalAssignment
             Dependencies = new List<string>();
             Dependents = new List<string>();
             isInstalled = false;
-            ExplicitInstall = false;
         }
 
         public void Setup (bool isExplicit)

@@ -58,6 +58,7 @@
     <Compile Include="Component.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="Item.cs" />
+    <Compile Include="Output.cs" />
     <Compile Include="VM.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

@@ -34,7 +34,16 @@
             </ListBox.ItemTemplate>
         </ListBox>
         <Label Content="{Binding LineInput[1].Target}" Grid.Row="2" Grid.Column="1" FontSize="25" HorizontalContentAlignment="Center"></Label>
-        <ListBox Name="LblOutput" Grid.Row="3" Grid.Column="1" ItemsSource="{Binding OutputDisplay}"></ListBox>
+        <ListBox Name="LblOutput" Grid.Row="3" Grid.Column="1" ItemsSource="{Binding OutputDisplay}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="{Binding Command}" FontSize="20" Height="50" Width="125" HorizontalContentAlignment="Left"></Label>
+                        <Label Content="{Binding Target}" FontSize="20" Height="50" Width="150"></Label>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
         <Button Name="BtnExecute" Content="Execute String" FontSize="25" Grid.Row="4" Grid.Column="1" Click="BtnExecute_Click"></Button>
     </Grid>
 </Window>
