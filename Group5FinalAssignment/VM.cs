@@ -94,6 +94,8 @@ namespace Group5FinalAssignment
                             Remove(cmd.Target, true);
                             break;
                         case "LIST":
+                            BuildOutput(cmd.Command, "");
+                            List();
                             break;
                         case "END":
                             BuildOutput(cmd.Command, cmd.Target);
@@ -120,13 +122,11 @@ namespace Group5FinalAssignment
                 Components.Add(inputName, new Component(inputName));
             if (Components[inputName].isInstalled)                          //If dependent component is installed, return void
             {
-                //Console.WriteLine(inputName + " is already installed, cannot change dependencies");
                 string lineWrite = " is already installed, cannot change dependencies";
                 BuildOutput(inputName, lineWrite);
                 return;
             }
-            string depList = "";
-            foreach (string depend in inputDepends)                         //Else
+            foreach (string depend in inputDepends)                         
                 //No duplicate or self-referential dependencies
                 if ((depend != inputName) && (!Components[inputName].Dependencies.Contains(depend)))
                 {
@@ -134,17 +134,9 @@ namespace Group5FinalAssignment
                     if (!Components.ContainsKey(depend))                    //if dependency is unknown then add to known component list
                         Components.Add(depend, new Component(depend));
                     Components[depend].Dependents.Add(inputName);           //add dependent component to dependency
-                    depList = depList + depend;
                 }
                 else
                     continue;
-
-            OutputDisplay.Add(new Output
-            {
-                Command = "Depend",
-                Target = inputName,
-                DepOutput = depList
-            });
         }
 
         public void Install(string inputName, bool isExplicit)
@@ -153,7 +145,6 @@ namespace Group5FinalAssignment
                 Components.Add(inputName, new Component(inputName));
             if (Components[inputName].isInstalled)                          //If component is installed, return void
             {
-                //Console.WriteLine(inputName + " is already installed.");
                 string lineWrite = " is already installed.";
                 BuildOutput(inputName, lineWrite);
                 return;
@@ -162,7 +153,7 @@ namespace Group5FinalAssignment
                 foreach (string dependency in Components[inputName].Dependencies)
                         Install(dependency, false);
             Components[inputName].Setup(isExplicit);                        //Install component
-            BuildOutput("Installing ", inputName);
+            BuildOutput("    Installing ", inputName);
         }
 
         void Remove(string name, bool ExplicitlyRemove)
@@ -186,7 +177,7 @@ namespace Group5FinalAssignment
                         continue;
             
             //Uninstall components
-            BuildOutput("Removing ", name);
+            BuildOutput("    Removing ", name);
             Components[name].isInstalled = false;
             Components[name].ExplicitInstall = new bool();
             if (Components[name].Dependencies.Count > 0)
@@ -196,7 +187,9 @@ namespace Group5FinalAssignment
         
         public void List()
         {
-
+            foreach (string c in Components.Keys)
+                if (Components[c].isInstalled == true)
+                    BuildOutput("    ", c);
         }
         
         public event PropertyChangedEventHandler PropertyChanged;

@@ -21,8 +21,7 @@
             <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <Label Content="Input File Display" Grid.Row="0" Grid.Column="1" FontSize="25" HorizontalContentAlignment="Center"></Label>
-        <!--<TextBlock Text="}" Grid.Row="1" Grid.Column="1"></TextBlock>-->
-        <ListBox Name="TxtInput" Grid.Row="1" Grid.Column="1"  ItemsSource="{Binding LineInput}">
+        <ListBox Name="TxtInput" Grid.Row="1" Grid.Column="1"  ItemsSource="{Binding InputLines}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
@@ -33,13 +32,12 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Label Content="{Binding LineInput[1].Target}" Grid.Row="2" Grid.Column="1" FontSize="25" HorizontalContentAlignment="Center"></Label>
         <ListBox Name="LblOutput" Grid.Row="3" Grid.Column="1" ItemsSource="{Binding OutputDisplay}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
                         <Label Content="{Binding Command}" FontSize="20" Height="50" Width="125" HorizontalContentAlignment="Left"></Label>
-                        <Label Content="{Binding Target}" FontSize="20" Height="50" Width="150"></Label>
+                        <Label Content="{Binding Target}" FontSize="20" Height="50" Width="400"></Label>
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
