@@ -199,16 +199,20 @@ namespace Group5FinalAssignment
         {
             //Exit conditions
             if (Components[name].ExplicitInstall == true && ExplicitlyRemove == false)
+            {
+                BuildOutput(TAB + name, ISNEEDED, EMPTY);
                 return;
+            }
             if (Components[name].isInstalled == false)
             {
-                Console.WriteLine(TAB + name + ISNOTINSTALLED);
+                BuildOutput(TAB + name, ISNOTINSTALLED, EMPTY);
                 return;
             }
             if(Components[name].ExplicitInstall==false && Components[name].isInstalled==true && ExplicitlyRemove==true && Components[name].Dependents.Count==0)
             {
                 Components[name].isInstalled = false;
                 Components[name].ExplicitInstall = false;
+                BuildOutput(REMOVING, name, EMPTY);
             }
 
 
