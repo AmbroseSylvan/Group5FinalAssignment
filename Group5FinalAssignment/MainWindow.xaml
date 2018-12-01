@@ -25,9 +25,9 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <Label Content="{Binding Command}" FontSize="20" Height="50" Width="125" HorizontalContentAlignment="Left"></Label>
-                        <Label Content="{Binding Target}" FontSize="20" Height="50" Width="150"></Label>
-                        <Label Content="{Binding DisplayDepElement}" FontSize="20" Height="50"></Label>
+                        <Label Content="{Binding Command}" FontSize="15" Height="35" Width="125" HorizontalContentAlignment="Left"></Label>
+                        <Label Content="{Binding Target}" FontSize="15" Height="35" Width="150"></Label>
+                        <Label Content="{Binding DisplayDepElement}" FontSize="15" Height="35"></Label>
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
@@ -36,8 +36,9 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <Label Content="{Binding Command}" FontSize="20" Height="50" Width="125" HorizontalContentAlignment="Left"></Label>
-                        <Label Content="{Binding Target}" FontSize="20" Height="50" Width="400"></Label>
+                        <Label Content="{Binding Command}" FontSize="15" Height="40" Width="125" HorizontalContentAlignment="Left"></Label>
+                        <Label Content="{Binding Target}" FontSize="15" Height="40" Width="150"></Label>
+                        <Label Content="{Binding DepOutput}" FontSize="15" Height="40"></Label>
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
