@@ -11,6 +11,23 @@ namespace Group5FinalAssignment
 {
     class VM : INotifyPropertyChanged
     {
+        #region Constants
+        const string END = "END";
+        const string INSTALL = "INSTALL";
+        const string DEPEND = "DEPEND";
+        const string REMOVE = "REMOVE";
+        const string LIST = "LIST";
+        const string INVENDSYNTAX = "Invalid syntax.  No END statement found.";
+        const string EMPTY = "";
+        const string FILEPATH = "../../List.txt";
+        const string ISINST1 = " is already installed, cannot change dependencies";
+        const string ISINST2 = "    is already installed.";
+        const string INSTALLING = "    Installing ";
+        const string ISNOTINSTALLED = " is not installed.";
+        const string TAB = "    ";
+        const string ISNEEDED = " is still needed.";
+        const string REMOVING = "    Removing ";
+        #endregion
         #region Properties
         //Used to parse the input string into individual elements for further steps and to display to list box.
         private BindingList<Input> inputLines;
@@ -40,7 +57,7 @@ namespace Group5FinalAssignment
 
         public void ReadInputFile()
         {
-            string[] inputfile = File.ReadAllLines("../../List.txt");
+            string[] inputfile = File.ReadAllLines(FILEPATH);
             InputLines = new BindingList<Input>();
             string[] cmdElements;
 
@@ -70,7 +87,7 @@ namespace Group5FinalAssignment
             //Check if the input contains an END statement
             bool oktoExecute = false;
             foreach (Input line in InputLines)
-                if (line.Command == "END")
+                if (line.Command == END)
                 {
                     oktoExecute = true;
                     break;
@@ -81,29 +98,29 @@ namespace Group5FinalAssignment
                 {
                     switch (cmd.Command)
                     {
-                        case "INSTALL":
-                            BuildOutput(cmd.Command, cmd.Target, "");
+                        case INSTALL:
+                            BuildOutput(cmd.Command, cmd.Target, EMPTY);
                             Install(cmd.Target, true);
                             break;
-                        case "DEPEND":
+                        case DEPEND:
                             BuildOutput(cmd.Command, cmd.Target, cmd.DisplayDepElement);
                             Depend(cmd.Target, cmd.Dependencies);
                             break;
-                        case "REMOVE":
-                            BuildOutput(cmd.Command, cmd.Target, "");
+                        case REMOVE:
+                            BuildOutput(cmd.Command, cmd.Target, EMPTY);
                             Remove(cmd.Target, true);
                             break;
-                        case "LIST":
-                            BuildOutput(cmd.Command, "", "");
+                        case LIST:
+                            BuildOutput(cmd.Command, EMPTY, EMPTY);
                             List();
                             break;
-                        case "END":
-                            BuildOutput(cmd.Command, cmd.Target, "");
+                        case END:
+                            BuildOutput(cmd.Command, cmd.Target, EMPTY);
                             return;
                     }
                 }
             else
-                BuildOutput("", "Invalid syntax.  No END statement found.","");
+                BuildOutput(EMPTY, INVENDSYNTAX, EMPTY);
         }
 
         private void BuildOutput(string command, string target, string depOutput)
@@ -123,7 +140,7 @@ namespace Group5FinalAssignment
                 Components.Add(inputName, new Component(inputName));
             if (Components[inputName].isInstalled)                          //If dependent component is installed, return void
             {
-                string lineWrite = " is already installed, cannot change dependencies";
+                string lineWrite = ISINST1;
                 BuildOutput(inputName, lineWrite,"");
                 return;
             }
@@ -134,7 +151,7 @@ namespace Group5FinalAssignment
                     Components[inputName].Dependencies.Add(depend);         //add dependency to component
                     if (!Components.ContainsKey(depend))                    //if dependency is unknown then add to known component list
                         Components.Add(depend, new Component(depend));
-                    Components[depend].Dependents.Add(inputName);           //add dependent component to dependency
+                       Components[depend].Dependents.Add(inputName);           //add dependent component to dependency
                 }
                 else
                     continue;
@@ -144,34 +161,37 @@ namespace Group5FinalAssignment
         {
             if (!Components.ContainsKey(inputName))                         //If component is not known, add to dictionary
                 Components.Add(inputName, new Component(inputName));
-            if (Components[inputName].isInstalled)                          //If component is installed, return void
+            if (Components[inputName].isInstalled==true)                          //If component is installed, return void
             {
-                string lineWrite = "    is already installed.";
-                BuildOutput(inputName, lineWrite,"");
+                string lineWrite = ISINST2;
+                BuildOutput(inputName, lineWrite, EMPTY);
                 return;
             }
-            if (Components[inputName].Dependencies.Count == 0  && Components[inputName].isInstalled==false)
+            else if (Components[inputName].Dependencies.Count == 0  && Components[inputName].isInstalled==false)
             {
                 Components[inputName].Setup(isExplicit);
-                BuildOutput("    Installing ", inputName,"");
+                BuildOutput(INSTALLING, inputName,EMPTY);
+            }
+            else if (Components[inputName].Dependencies.Count == 0 && Components[inputName].isInstalled == true)
+            {
+                BuildOutput(inputName, ISINST2, EMPTY);
             }
 
-
             if (Components[inputName].Dependencies.Count > 0)               //implicitly install dependencies. 
-            { 
+            {
                 foreach (string dependency in Components[inputName].Dependencies)
                 {                                                             //added brackets here around foreach
-                    if(Components[dependency].isInstalled==false)              //added statement to check if dependency installed before installing
-                    { 
-                    Install(dependency, false);
-                    BuildOutput("    Installing ", dependency,"");
+                    if (Components[dependency].isInstalled == false)              //added statement to check if dependency installed before installing
+                    {
+                        Install(dependency, false);
+                        BuildOutput(INSTALLING, dependency, EMPTY);
                     }
                 }
-                if (Components[inputName].isInstalled == false)
-                { 
-                Components[inputName].Setup(isExplicit);                        //Install component
-                BuildOutput("    Installing ", inputName,"");
-                }
+                    if (Components[inputName].isInstalled == false)
+                    {
+                        Components[inputName].Setup(isExplicit);                      //Install component if it has not been installed and if it has been called to be installed
+                        BuildOutput(INSTALLING, inputName, EMPTY);
+                    } 
             }
         }
 
@@ -182,23 +202,30 @@ namespace Group5FinalAssignment
                 return;
             if (Components[name].isInstalled == false)
             {
-                Console.WriteLine("   " + name + " is not installed.");
+                Console.WriteLine(TAB + name + ISNOTINSTALLED);
                 return;
             }
+            if(Components[name].ExplicitInstall==false && Components[name].isInstalled==true && ExplicitlyRemove==true && Components[name].Dependents.Count==0)
+            {
+                Components[name].isInstalled = false;
+                Components[name].ExplicitInstall = false;
+            }
+
+
             if (Components[name].Dependents.Count > 0)
                 foreach (string d in Components[name].Dependents)
                     if (Components[d].isInstalled == true  && ExplicitlyRemove==true)
                     {
-                        BuildOutput("   " + name, " is still needed.","");
+                        BuildOutput(TAB + name, ISNEEDED,EMPTY);
                         return;
                     }
                     else
                         continue;
             
             //Uninstall components
-            BuildOutput("    Removing ", name, "");
+            BuildOutput(REMOVING, name, EMPTY);
             Components[name].isInstalled = false;
-            Components[name].ExplicitInstall = new bool();
+            Components[name].ExplicitInstall = false;
             if (Components[name].Dependencies.Count > 0)
                 foreach (string d in Components[name].Dependencies)
                     Remove(d, false);
