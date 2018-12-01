@@ -68,15 +68,15 @@ namespace Group5FinalAssignment
 
                 InputLines.Add(new Input
                 {
-                    Command = cmdElements[0]                               //Element at index 0 is command type
+                    Command = cmdElements[0].Trim()                               //Element at index 0 is command type
                 });
 
                 if (c > 1)                                                 //element at index 1 is target of command
-                    InputLines[i].Target = cmdElements[1];
+                    InputLines[i].Target = cmdElements[1].Trim();
                 if (c > 2)                                                 //elements at index 2 and higher are dependencies
                     for (int j = 2; j < c; j++)
                     {
-                        InputLines[i].Dependencies.Add(cmdElements[j]);
+                        InputLines[i].Dependencies.Add(cmdElements[j].Trim());
                         InputLines[i].DisplayDepElement = InputLines[i].DisplayDepElement + " " + InputLines[i].Dependencies[j - 2];
                     }
             }
@@ -184,7 +184,6 @@ namespace Group5FinalAssignment
                     if (Components[dependency].isInstalled == false)              //added statement to check if dependency installed before installing
                     {
                         Install(dependency, false);
-                        BuildOutput(INSTALLING, dependency, EMPTY);
                     }
                 }
                     if (Components[inputName].isInstalled == false)
@@ -200,10 +199,10 @@ namespace Group5FinalAssignment
             //Exit conditions
             if (Components[name].ExplicitInstall == true && ExplicitlyRemove == false)
             {
-                BuildOutput(TAB + name, ISNEEDED, EMPTY);
+                /*BuildOutput(TAB + name, ISNEEDED, EMPTY);*/
                 return;
             }
-            if (Components[name].isInstalled == false)
+            if (Components[name].isInstalled == false && ExplicitlyRemove == true)
             {
                 BuildOutput(TAB + name, ISNOTINSTALLED, EMPTY);
                 return;
@@ -239,7 +238,7 @@ namespace Group5FinalAssignment
         {
             foreach (string c in Components.Keys)
                 if (Components[c].isInstalled == true)
-                    BuildOutput("    ", c, "");
+                    BuildOutput(TAB, c, EMPTY);
         }
         
         public event PropertyChangedEventHandler PropertyChanged;
