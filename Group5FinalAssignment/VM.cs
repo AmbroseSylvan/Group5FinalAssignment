@@ -46,18 +46,22 @@ namespace Group5FinalAssignment
 
             for (int i = 0; i < inputfile.Length; i++)
             {
-                cmdElements = inputfile[i].Split(' ');                     //Split each command line
+                //Split each command line
+                cmdElements = inputfile[i].Split(' ');                     
                 int c = cmdElements.Count();
 
                 InputLines.Add(new Input
                 {
-                    Command = cmdElements[0]                               //Element at index 0 is command type
+                    //Element at index 0 is command type
+                    Command = cmdElements[0]                               
                 });
 
-                if (c > 1)                                                 //element at index 1 is target of command
+                if (c > 1)
+                    //element at index 1 is target of command
                     InputLines[i].Target = cmdElements[1];
-                if (c > 2)                                                 //elements at index 2 and higher are dependencies
-                    for (int j = 2; j < c; j++)
+                //elements at index 2 and higher are dependencies
+                if (c > 2)                                                 
+                for (int j = 2; j < c; j++)
                     {
                         InputLines[i].Dependencies.Add(cmdElements[j]);
                         InputLines[i].DisplayDepElement = InputLines[i].DisplayDepElement + " " + InputLines[i].Dependencies[j - 2];
@@ -118,22 +122,25 @@ namespace Group5FinalAssignment
 
         public void Depend(string inputName, List<string> inputDepends)
         {
-            if (!Components.ContainsKey(inputName))                         //If dependent component not known, add to dictionary
+            //If dependent component not known, add to dictionary
+            if (!Components.ContainsKey(inputName))                         
                 Components.Add(inputName, new Component(inputName));
-            if (Components[inputName].isInstalled)                          //If dependent component is installed, return void
+            //If dependent component is installed, return void
+            if (Components[inputName].isInstalled)                          
             {
                 string lineWrite = " is already installed, cannot change dependencies";
                 BuildOutput(inputName, lineWrite);
                 return;
             }
+
             foreach (string depend in inputDepends)                         
                 //No duplicate or self-referential dependencies
                 if ((depend != inputName) && (!Components[inputName].Dependencies.Contains(depend)))
                 {
-                    Components[inputName].Dependencies.Add(depend);         //add dependency to component
-                    if (!Components.ContainsKey(depend))                    //if dependency is unknown then add to known component list
+                    Components[inputName].Dependencies.Add(depend);         
+                    if (!Components.ContainsKey(depend))                    
                         Components.Add(depend, new Component(depend));
-                    Components[depend].Dependents.Add(inputName);           //add dependent component to dependency
+                    Components[depend].Dependents.Add(inputName);           
                 }
                 else
                     continue;
@@ -141,45 +148,55 @@ namespace Group5FinalAssignment
 
         public void Install(string inputName, bool isExplicit)
         {
-            if (!Components.ContainsKey(inputName))                         //If component is not known, add to dictionary
+            //If component is not known, add to dictionary.
+            if (!Components.ContainsKey(inputName))                         
                 Components.Add(inputName, new Component(inputName));
-            if (Components[inputName].isInstalled)                          //If component is installed, return void
+            //If component is installed, return void.
+            if (Components[inputName].isInstalled && isExplicit == true)                          
             {
                 string lineWrite = " is already installed.";
                 BuildOutput(inputName, lineWrite);
                 return;
-            }             
-            if (Components[inputName].Dependencies.Count > 0)               //implicitly install dependencies. 
+            }
+            else if (Components[inputName].isInstalled &&isExplicit == false)
+                return;
+
+            //Implicitly install dependencies. 
+            if (Components[inputName].Dependencies.Count > 0)               
                 foreach (string dependency in Components[inputName].Dependencies)
                         Install(dependency, false);
-            Components[inputName].Setup(isExplicit);                        //Install component
+            //Install component.
+            Components[inputName].Setup(isExplicit);                        
             BuildOutput("    Installing ", inputName);
         }
 
         void Remove(string name, bool ExplicitlyRemove)
         {
-            //Exit conditions
+            //Guard conditions
             if (Components[name].ExplicitInstall == true && ExplicitlyRemove == false)
                 return;
             if (Components[name].isInstalled == false)
             {
-                Console.WriteLine(name + " is not installed.");
+                BuildOutput(name, " is not installed.");
                 return;
             }
             if (Components[name].Dependents.Count > 0)
                 foreach (string d in Components[name].Dependents)
-                    if (Components[d].isInstalled == true)
+                    if (Components[d].isInstalled == true && ExplicitlyRemove == true)
                     {
                         BuildOutput(name, " is still needed.");
                         return;
                     }
+                    else if (Components[d].isInstalled == true && ExplicitlyRemove == false)
+                        return;
                     else
                         continue;
             
-            //Uninstall components
+            //Uninstall components.
             BuildOutput("    Removing ", name);
             Components[name].isInstalled = false;
             Components[name].ExplicitInstall = new bool();
+            //Implicit uninstallation of dependencies.
             if (Components[name].Dependencies.Count > 0)
                 foreach (string d in Components[name].Dependencies)
                     Remove(d, false);
