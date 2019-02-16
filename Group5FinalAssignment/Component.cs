@@ -1,4 +1,5 @@
-﻿using System;
+﻿// Group 5, Final Assignment, PROG8010/F18.
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,21 +15,22 @@ namespace Group5FinalAssignment
 
         public List<string> Dependents { get; set; }
 
-        public bool isInstalled { get; set; }
+        public bool IsInstalled { get; set; } 
 
-        public bool ExplicitInstall { get; set; }
+        public bool ExplicitInstall { get; set; } 
 
         public Component(string name)
         {
             Name = name;
             Dependencies = new List<string>();
             Dependents = new List<string>();
-            isInstalled = false;
+            IsInstalled = false;
+            ExplicitInstall = false;
         }
 
-        public void Setup (bool isExplicit)
+        public void Setup(bool isExplicit)
         {
-            isInstalled = true;
+            IsInstalled = true;
             ExplicitInstall = isExplicit;
         }
     }
